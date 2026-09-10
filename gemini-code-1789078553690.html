@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VIL - Logistics Management</title>
+  <style>
+    :root {
+      --bg-color: #f2f7f4;
+      --card-bg: #ffffff;
+      --primary: #2e5a44;
+      --primary-light: #e8f2ec;
+      --accent: #b8d8c4;
+      --text: #2c3e35;
+      --sub-text: #607369;
+      --border: #d4e3da;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg-color); color: var(--text); min-height: 100vh;
+      display: flex; flex-direction: column;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    /* Splash Screen */
+    #splash {
+      position: fixed; inset: 0; background: linear-gradient(135deg, #1b3628, #2e5a44);
+      display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999;
+      transition: opacity 0.6s ease;
+    }
+    #splash.fade-out { opacity: 0; pointer-events: none; }
+    .splash-logo { font-size: 3.5rem; font-weight: 800; letter-spacing: 0.2em; color: #ffffff; margin-bottom: 8px; }
+    .splash-sub { font-size: 0.9rem; color: var(--accent); letter-spacing: 0.15em; font-weight: 500; }
+
+    #loginScreen { position: fixed; inset: 0; background: var(--bg-color); display: flex; justify-content: center; align-items: center; z-index: 9000; }
+    .login-card { background: var(--card-bg); padding: 30px; border-radius: 16px; border: 1px solid var(--border); text-align: center; width: 300px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+    .login-title { font-size: 1.1rem; margin-bottom: 20px; color: var(--primary); font-weight: bold; }
+    .pass-dots { display: flex; justify-content: center; gap: 12px; margin-bottom: 25px; }
+    .dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--primary); }
+    .dot.filled { background: var(--primary); }
+    .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .key-btn { background: var(--primary-light); border: none; border-radius: 50%; width: 55px; height: 55px; font-size: 1.2rem; color: var(--primary); margin: 0 auto; cursor: pointer; font-weight: bold; }
+
+    #app { display: none; flex: 1; flex-direction: column; }
+    #app.active { display: flex; }
+    
+    header {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--card-bg); border-bottom: 1px solid var(--border); padding: 12px 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+    }
+    .header-top { display: flex; justify-content: space-between; align-items: center; max-width: 800px; margin: 0 auto; }
+    .app-brand { font-size: 1.6rem; color: var(--primary); font-weight: 800; letter-spacing: 0.15em; }
+    .header-actions { display: flex; gap: 8px; align-items: center; }
+    .sync-btn { background: var(--primary); color: #ffffff; border: none; padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; cursor: pointer; font-weight: bold; }
+    .logout-btn { background: #ffffff; color: #d9534f; border: 1px solid #d9534f; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; cursor: pointer; font-weight: bold; }
+
+    .info-bar { max-width: 800px; margin: 10px auto 0; display: flex; justify-content: space-between; align-items: center; background: var(--primary-light); padding: 8px 14px; border-radius: 8px; }
+    .date-time { font-size: 0.85rem; font-weight: bold; }
+
+    .single-col-container { max-width: 800px; margin: 20px auto; width: 100%; padding: 0 15px 40px 15px; display: flex; flex-direction: column; gap: 24px; }
+    .section-card { background: var(--card-bg); border-radius: 14px; border: 1px solid var(--border); padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+    .section-header { font-size: 1.1rem; color: var(--primary); font-weight: bold; padding-bottom: 10px; margin-bottom: 16px; border-bottom: 2px solid var(--primary-light); display: flex; justify-content: space-between; align-items: center; }
+
+    input, textarea, select { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 10px; font-size: 0.9rem; font-family: inherit; }
+    button.btn-main { background: var(--primary); color: white; border: none; padding: 9px 18px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: bold; font-family: inherit; }
+
+    .weather-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin-bottom: 14px; }
+    .weather-card { background: #fafafa; border: 1px solid var(--border); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; justify-content: space-between; }
+    .weather-loc { font-weight: bold; color: var(--primary); font-size: 0.95rem; display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .weather-info-row { font-size: 0.85rem; margin-top: 4px; display: flex; justify-content: space-between; }
+    .weather-del-btn { background: none; border: none; color: #d9534f; cursor: pointer; font-size: 0.75rem; }
+
+    .post-item { border-bottom: 1px solid var(--border); padding: 12px 0; }
+    .post-item:last-child { border-bottom: none; }
+    .post-meta { font-size: 0.78rem; color: var(--sub-text); margin-bottom: 6px; }
+    .device-badge { background: #e0ece5; color: #2e5a44; font-family: monospace; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-left: 6px; }
+    .post-text { font-size: 0.92rem; white-space: pre-wrap; line-height: 1.4; }
+
+    .cal-header-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .cal-nav-btn { background: var(--primary-light); border: 1px solid var(--border); border-radius: 6px; padding: 5px 12px; cursor: pointer; color: var(--primary); font-weight: bold; font-family: inherit; }
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; font-size: 0.8rem; }
+    .cal-day-header { font-weight: bold; padding: 6px 0; background: var(--primary-light); border-radius: 6px; color: var(--primary); }
+    .cal-day-cell {
+      min-height: 65px; background: #fafafa; border: 1px solid var(--border); border-radius: 6px; padding: 4px;
+      display: flex; flex-direction: column; justify-content: flex-start; text-align: left; cursor: pointer; user-select: none;
+    }
+    .cal-day-cell:hover { background: #f0f7f2; }
+    .cal-day-cell.other-month { opacity: 0.3; cursor: default; }
+    .cal-day-num { font-weight: bold; font-size: 0.75rem; margin-bottom: 2px; }
+    .cal-day-cell.today { background: #e2f0e8; border-color: var(--primary); }
+    .cal-day-cell.selected-day { border: 2px solid var(--primary) !important; background: #dcece2; }
+    .cal-event-chip { background: var(--primary); color: white; font-size: 0.65rem; padding: 2px 4px; border-radius: 3px; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    .tab-container { display: flex; gap: 8px; margin-bottom: 14px; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    .tab-btn { background: none; border: none; font-size: 0.88rem; padding: 6px 12px; cursor: pointer; color: var(--sub-text); font-weight: bold; font-family: inherit; }
+    .tab-btn.active { color: var(--primary); border-bottom: 3px solid var(--primary); }
+
+    .event-item { background: var(--primary-light); padding: 10px 14px; border-radius: 8px; margin-bottom: 8px; font-size: 0.88rem; border-left: 4px solid var(--primary); }
+
+    .calc-container { max-width: 320px; margin: 0 auto; }
+    .calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .calc-btn { padding: 12px; font-size: 1rem; background: #f4f4f4; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; font-weight: bold; font-family: inherit; }
+    .calc-btn:active { background: #ddd; }
+  </style>
+</head>
+<body>
+
+  <!-- Splash Screen -->
+  <div id="splash">
+    <div class="splash-logo">VIL</div>
+    <div class="splash-sub">LOGISTICS MANAGEMENT SYSTEM</div>
+  </div>
+
+  <div id="loginScreen">
+    <div class="login-card">
+      <div class="login-title">暗証番号を入力</div>
+      <div class="pass-dots">
+        <div class="dot" id="d1"></div><div class="dot" id="d2"></div><div class="dot" id="d3"></div><div class="dot" id="d4"></div>
+      </div>
+      <div class="keypad">
+        <button class="key-btn" onclick="pressKey('1')">1</button>
+        <button class="key-btn" onclick="pressKey('2')">2</button>
+        <button class="key-btn" onclick="pressKey('3')">3</button>
+        <button class="key-btn" onclick="pressKey('4')">4</button>
+        <button class="key-btn" onclick="pressKey('5')">5</button>
+        <button class="key-btn" onclick="pressKey('6')">6</button>
+        <button class="key-btn" onclick="pressKey('7')">7</button>
+        <button class="key-btn" onclick="pressKey('8')">8</button>
+        <button class="key-btn" onclick="pressKey('9')">9</button>
+        <button class="key-btn" onclick="clearKey()">C</button>
+        <button class="key-btn" onclick="pressKey('0')">0</button>
+        <button class="key-btn" onclick="delKey()">←</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="app">
+    <header>
+      <div class="header-top">
+        <div class="app-brand">VIL</div>
+        <div class="header-actions">
+          <button onclick="syncData()" class="sync-btn" id="syncBtn">共有 (同期)</button>
+          <button onclick="logout()" class="logout-btn">ログアウト</button>
+        </div>
+      </div>
+      <div class="info-bar">
+        <div class="date-time" id="currentClock">----/--/-- (-) --:--:--</div>
+        <div style="font-size:0.8rem; font-weight:bold; color:var(--primary);" id="statusLabel">リアルタイム天気連携中</div>
+      </div>
+    </header>
+
+    <div class="single-col-container">
+
+      <!-- 1. 天気情報 -->
+      <section class="section-card">
+        <div class="section-header">
+          <span>地域別 リアルタイム天気</span>
+          <button onclick="addWeatherLocation()" style="background:var(--primary-light); border:1px solid var(--border); color:var(--primary); padding:4px 10px; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:bold;">＋ 地域を追加</button>
+        </div>
+        <div class="weather-grid" id="weatherList"></div>
+      </section>
+
+      <!-- 2. カレンダー・予定管理 -->
+      <section class="section-card">
+        <div class="section-header">
+          <span>カレンダー・予定管理</span>
+          <button onclick="toggleSection('eventSection')" style="background:none; border:none; color:var(--primary); cursor:pointer; font-size:0.8rem; font-weight:bold;">開く / 畳む</button>
+        </div>
+        <div id="eventSection">
+          <form id="eventForm" onsubmit="submitEvent(event)" style="display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; background:var(--primary-light); padding:12px; border-radius:8px;">
+            <input type="date" id="evtDate" required style="margin:0; flex:1; min-width:130px;">
+            <input type="time" id="evtTime" value="09:00" required style="margin:0; width:110px;">
+            <input type="text" id="evtTitle" placeholder="予定内容を入力" required style="margin:0; flex:2; min-width:150px;">
+            <button type="submit" class="btn-main" style="white-space:nowrap;">予定追加</button>
+          </form>
+
+          <div class="tab-container">
+            <button class="tab-btn active" id="tabGridBtn" onclick="switchCalTab('grid')">月間カレンダー</button>
+            <button class="tab-btn" id="tabListBtn" onclick="switchCalTab('list')">予定一覧</button>
+          </div>
+
+          <div id="calGridContainer">
+            <div class="cal-header-nav">
+              <button class="cal-nav-btn" onclick="changeMonth(-1)">前月</button>
+              <strong id="calMonthTitle" style="font-size:1.05rem; color:var(--primary);"></strong>
+              <button class="cal-nav-btn" onclick="changeMonth(1)">次月</button>
+            </div>
+            <div class="cal-grid" id="calGridHeader">
+              <div class="cal-day-header" style="color:#d9534f;">日</div>
+              <div class="cal-day-header">月</div>
+              <div class="cal-day-header">火</div>
+              <div class="cal-day-header">水</div>
+              <div class="cal-day-header">木</div>
+              <div class="cal-day-header">金</div>
+              <div class="cal-day-header" style="color:#0275d8;">土</div>
+            </div>
+            <div class="cal-grid" id="calGridBody" style="margin-top:4px;"></div>
+          </div>
+
+          <div id="eventList" style="display:none;"></div>
+        </div>
+      </section>
+
+      <!-- 3. 掲示板 -->
+      <section class="section-card">
+        <div class="section-header">
+          <span>掲示板</span>
+          <span id="myDeviceIdDisplay" style="font-size:0.75rem; color:var(--sub-text); font-weight:normal;"></span>
+        </div>
+        <form id="bbsForm" onsubmit="submitBbs(event)">
+          <input type="text" id="bbsName" placeholder="お名前（省略可）" style="margin-bottom:8px;">
+          <textarea id="bbsMsg" rows="3" placeholder="メッセージを入力してください" required></textarea>
+          <button type="submit" class="btn-main">投稿する</button>
+        </form>
+        <hr style="margin: 16px 0; border:none; border-top: 1px solid var(--border);">
+        <div id="bbsList"></div>
+      </section>
+
+      <!-- 4. メモ -->
+      <section class="section-card">
+        <div class="section-header">
+          <span>共有メモ</span>
+        </div>
+        <textarea id="memoArea" rows="6" placeholder="メモを入力..." oninput="autoSaveMemo()"></textarea>
+      </section>
+
+      <!-- 5. 電卓 -->
+      <section class="section-card">
+        <div class="section-header">
+          <span>ミニ電卓</span>
+        </div>
+        <div class="calc-container">
+          <input type="text" id="calcDisplay" readonly style="text-align:right; font-size:1.2rem; margin-bottom:10px; padding:10px;">
+          <div class="calc-grid">
+            <button class="calc-btn" onclick="calcInput('C')">C</button>
+            <button class="calc-btn" onclick="calcInput('/')">÷</button>
+            <button class="calc-btn" onclick="calcInput('*')">×</button>
+            <button class="calc-btn" onclick="calcInput('-')">-</button>
+            <button class="calc-btn" onclick="calcInput('7')">7</button>
+            <button class="calc-btn" onclick="calcInput('8')">8</button>
+            <button class="calc-btn" onclick="calcInput('9')">9</button>
+            <button class="calc-btn" onclick="calcInput('+')">+</button>
+            <button class="calc-btn" onclick="calcInput('4')">4</button>
+            <button class="calc-btn" onclick="calcInput('5')">5</button>
+            <button class="calc-btn" onclick="calcInput('6')">6</button>
+            <button class="calc-btn" onclick="calcInput('=')" style="grid-row: span 2; background:var(--accent);">=</button>
+            <button class="calc-btn" onclick="calcInput('1')">1</button>
+            <button class="calc-btn" onclick="calcInput('2')">2</button>
+            <button class="calc-btn" onclick="calcInput('3')">3</button>
+            <button class="calc-btn" onclick="calcInput('0')" style="grid-column: span 2;">0</button>
+            <button class="calc-btn" onclick="calcInput('.')">.</button>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <script>
+    // ↓ここにステップ1で取得したGASのWebアプリURLを貼り付けます
+    const GAS_WEB_APP_URL = "ここにGASのデプロイURLを貼り付け";
+
+    setTimeout(function() {
+      var splash = document.getElementById('splash');
+      if (splash) {
+        splash.classList.add('fade-out');
+        setTimeout(function() { splash.style.display = 'none'; }, 600);
+      }
+    }, 3000);
+
+    var localBbs = JSON.parse(localStorage.getItem('VIL_LOCAL_BBS')) || [];
+    var localEvents = JSON.parse(localStorage.getItem('VIL_LOCAL_EVENTS')) || [];
+    var newUnsyncedBbs = [];
+    var newUnsyncedEvents = [];
+    var currentViewDate = new Date();
+
+    var savedLocations = JSON.parse(localStorage.getItem('VIL_WEATHER_LOCS_V2')) || [
+      { name: '田村市船引町', lat: 37.442, lon: 140.573 },
+      { name: '福島市', lat: 37.760, lon: 140.465 },
+      { name: '東京都千代田区', lat: 35.694, lon: 139.753 }
+    ];
+
+    function parseWmoCode(code) {
+      if (code === 0) return '晴れ';
+      if ([1, 2, 3].indexOf(code) !== -1) return 'くもり';
+      if ([45, 48].indexOf(code) !== -1) return '霧';
+      if ([51, 53, 55, 61, 63, 65, 80, 81, 82].indexOf(code) !== -1) return '雨';
+      if ([71, 73, 75, 77, 85, 86].indexOf(code) !== -1) return '雪';
+      if ([95, 96, 99].indexOf(code) !== -1) return '雷雨';
+      return '不明';
+    }
+
+    function fetchWeatherData(loc) {
+      var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + loc.lat + '&longitude=' + loc.lon + '&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=Asia%2FTokyo';
+      return fetch(url)
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          if (!data || !data.daily) return null;
+          return {
+            todayWeather: parseWmoCode(data.daily.weathercode[0]),
+            todayMax: Math.round(data.daily.temperature_2m_max[0]),
+            todayMin: Math.round(data.daily.temperature_2m_min[0]),
+            tomorrowWeather: parseWmoCode(data.daily.weathercode[1]),
+            tomorrowMax: Math.round(data.daily.temperature_2m_max[1]),
+            tomorrowMin: Math.round(data.daily.temperature_2m_min[1])
+          };
+        })
+        .catch(function(err) { return null; });
+    }
+
+    function renderWeatherList() {
+      var container = document.getElementById('weatherList');
+      if (!container) return;
+      container.innerHTML = '<p style="color:#888; font-size:0.85rem;">最新天気を読み込み中...</p>';
+
+      var promises = savedLocations.map(function(loc) { return fetchWeatherData(loc); });
+
+      Promise.all(promises).then(function(results) {
+        var html = '';
+        for (var i = 0; i < savedLocations.length; i++) {
+          var loc = savedLocations[i];
+          var w = results[i];
+          if (w) {
+            html += '<div class="weather-card">' +
+              '<div class="weather-loc"><span>' + loc.name + '</span><button class="weather-del-btn" onclick="removeWeatherLocation(' + i + ')">削除</button></div>' +
+              '<div class="weather-info-row"><span>今日: ' + w.todayWeather + '</span><strong>' + w.todayMax + '°C / ' + w.todayMin + '°C</strong></div>' +
+              '<div class="weather-info-row" style="color:var(--sub-text);"><span>明日: ' + w.tomorrowWeather + '</span><span>' + w.tomorrowMax + '°C / ' + w.tomorrowMin + '°C</span></div>' +
+            '</div>';
+          } else {
+            html += '<div class="weather-card">' +
+              '<div class="weather-loc"><span>' + loc.name + '</span><button class="weather-del-btn" onclick="removeWeatherLocation(' + i + ')">削除</button></div>' +
+              '<div class="weather-info-row"><span>データ取得不可</span></div>' +
+            '</div>';
+          }
+        }
+        container.innerHTML = html;
+      });
+    }
+
+    function addWeatherLocation() {
+      var name = prompt('追加したい地域名（例: 郡山市, 仙台市）');
+      if (name && name.trim()) {
+        fetch('https://geocoding-api.open-meteo.com/v1/search?name=' + encodeURIComponent(name.trim()) + '&count=1&language=ja&format=json')
+          .then(function(res) { return res.json(); })
+          .then(function(geoData) {
+            if (geoData.results && geoData.results.length > 0) {
+              var res = geoData.results[0];
+              savedLocations.push({ name: name.trim(), lat: res.latitude, lon: res.longitude });
+              localStorage.setItem('VIL_WEATHER_LOCS_V2', JSON.stringify(savedLocations));
+              renderWeatherList();
+            } else { alert('地域が見つかりませんでした。'); }
+          })
+          .catch(function() { alert('検索に失敗しました。'); });
+      }
+    }
+
+    function removeWeatherLocation(idx) {
+      if (confirm('削除しますか？')) {
+        savedLocations.splice(idx, 1);
+        localStorage.setItem('VIL_WEATHER_LOCS_V2', JSON.stringify(savedLocations));
+        renderWeatherList();
+      }
+    }
+
+    function getDeviceId() {
+      var devId = localStorage.getItem('VIL_DEVICE_ID');
+      if (!devId) {
+        var randStr = Math.random().toString(36).substring(2, 6).toUpperCase() + '-' + Math.random().toString(36).substring(2, 6).toUpperCase();
+        devId = 'ID:' + randStr;
+        localStorage.setItem('VIL_DEVICE_ID', devId);
+      }
+      return devId;
+    }
+
+    var pass = "";
+    function pressKey(num) {
+      if (pass.length < 4) {
+        pass += num; updateDots();
+        if (pass.length === 4) {
+          if (pass === "0000") {
+            setTimeout(function() {
+              document.getElementById('loginScreen').style.display = 'none';
+              document.getElementById('app').classList.add('active');
+              initApp();
+            }, 200);
+          } else { alert("暗証番号が違います"); clearKey(); }
+        }
+      }
+    }
+    function clearKey() { pass = ""; updateDots(); }
+    function delKey() { pass = pass.slice(0, -1); updateDots(); }
+    function updateDots() {
+      for (var i = 1; i <= 4; i++) {
+        document.getElementById('d' + i).classList.toggle('filled', i <= pass.length);
+      }
+    }
+
+    function logout() {
+      if (confirm('ログアウトしますか？')) {
+        pass = ""; updateDots();
+        document.getElementById('app').classList.remove('active');
+        document.getElementById('loginScreen').style.display = 'flex';
+      }
+    }
+
+    function startClock() {
+      setInterval(function() {
+        var now = new Date();
+        var days = ['日','月','火','水','木','金','土'];
+        document.getElementById('currentClock').innerText = now.getFullYear() + '/' + String(now.getMonth()+1).padStart(2,'0') + '/' + String(now.getDate()).padStart(2,'0') + ' (' + days[now.getDay()] + ') ' + String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0') + ':' + String(now.getSeconds()).padStart(2,'0');
+      }, 1000);
+    }
+
+    function initApp() {
+      startClock();
+      document.getElementById('evtDate').value = new Date().toISOString().split('T')[0];
+      document.getElementById('myDeviceIdDisplay').innerText = '自端末: ' + getDeviceId();
+      document.getElementById('memoArea').value = localStorage.getItem('VIL_LOCAL_MEMO') || '';
+      renderBbsUI();
+      renderMonthCalendar();
+      renderEventList();
+      renderWeatherList();
+    }
+
+    // GitHubからGASのWeb APIへ接続して双方向同期
+    function syncData() {
+      var btn = document.getElementById('syncBtn');
+      var status = document.getElementById('statusLabel');
+      btn.innerText = '同期中...'; btn.disabled = true;
+
+      var payload = {
+        newBbs: newUnsyncedBbs,
+        newEvent: newUnsyncedEvents,
+        memo: document.getElementById('memoArea').value
+      };
+
+      fetch(GAS_WEB_APP_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify(payload)
+      })
+      .then(function(res) { return res.json(); })
+      .then(function(res) {
+        localBbs = res.bbs; localEvents = res.events;
+        if (res.memo !== undefined && res.memo !== null) {
+          document.getElementById('memoArea').value = res.memo;
+          localStorage.setItem('VIL_LOCAL_MEMO', res.memo);
+        }
+        localStorage.setItem('VIL_LOCAL_BBS', JSON.stringify(localBbs));
+        localStorage.setItem('VIL_LOCAL_EVENTS', JSON.stringify(localEvents));
+        newUnsyncedBbs = []; newUnsyncedEvents = [];
+
+        renderBbsUI(); renderMonthCalendar(); renderEventList();
+        btn.innerText = '共有 (同期)'; btn.disabled = false;
+        status.innerText = 'クラウド同期完了 (' + new Date().toLocaleTimeString() + ')';
+        alert('スプレッドシートと同期しました！');
+      })
+      .catch(function(err) {
+        alert('同期エラーが発生しました。インターネット接続を確認してください。');
+        btn.innerText = '共有 (同期)'; btn.disabled = false;
+      });
+    }
+
+    function submitBbs(e) {
+      e.preventDefault();
+      var name = document.getElementById('bbsName').value || '名無し';
+      var msg = document.getElementById('bbsMsg').value;
+      var devId = getDeviceId();
+      var nowStr = new Date().toLocaleString('ja-JP');
+
+      var newItem = { time: nowStr, name: name, message: msg, deviceId: devId };
+      localBbs.unshift(newItem);
+      newUnsyncedBbs.push(newItem);
+      localStorage.setItem('VIL_LOCAL_BBS', JSON.stringify(localBbs));
+
+      document.getElementById('bbsMsg').value = '';
+      renderBbsUI();
+    }
+
+    function submitEvent(e) {
+      e.preventDefault();
+      var date = document.getElementById('evtDate').value;
+      var time = document.getElementById('evtTime').value;
+      var title = document.getElementById('evtTitle').value;
+
+      var newEv = { date: date, time: time, title: title, name: 'ローカル' };
+      localEvents.unshift(newEv);
+      newUnsyncedEvents.push(newEv);
+      localStorage.setItem('VIL_LOCAL_EVENTS', JSON.stringify(localEvents));
+
+      document.getElementById('evtTitle').value = '';
+      renderMonthCalendar();
+      renderEventList();
+    }
+
+    function selectDateForEvent(dateStr) {
+      document.getElementById('evtDate').value = dateStr;
+      var cells = document.querySelectorAll('.cal-day-cell');
+      for (var i = 0; i < cells.length; i++) {
+        cells[i].classList.remove('selected-day');
+      }
+      var targetCell = document.querySelector('.cal-day-cell[data-date="' + dateStr + '"]');
+      if (targetCell) targetCell.classList.add('selected-day');
+
+      var titleInput = document.getElementById('evtTitle');
+      titleInput.focus();
+    }
+
+    function autoSaveMemo() {
+      var val = document.getElementById('memoArea').value;
+      localStorage.setItem('VIL_LOCAL_MEMO', val);
+    }
+
+    function renderBbsUI() {
+      var container = document.getElementById('bbsList');
+      if (localBbs.length === 0) {
+        container.innerHTML = '<p style="color:#888;">まだ投稿はありません。</p>';
+      } else {
+        container.innerHTML = localBbs.map(function(item) {
+          return '<div class="post-item">' +
+            '<div class="post-meta"><strong>' + item.name + '</strong>' + (item.deviceId ? '<span class="device-badge">' + item.deviceId + '</span>' : '') + ' • ' + item.time + '</div>' +
+            '<div class="post-text">' + item.message + '</div>' +
+          '</div>';
+        }).join('');
+      }
+    }
+
+    function renderMonthCalendar() {
+      var year = currentViewDate.getFullYear();
+      var month = currentViewDate.getMonth();
+      document.getElementById('calMonthTitle').innerText = year + '年 ' + (month + 1) + '月';
+
+      var firstDay = new Date(year, month, 1);
+      var lastDay = new Date(year, month + 1, 0);
+      var startDayOfWeek = firstDay.getDay();
+      var totalDays = lastDay.getDate();
+
+      var bodyContainer = document.getElementById('calGridBody');
+      bodyContainer.innerHTML = '';
+
+      var todayStr = new Date().toISOString().split('T')[0];
+      var selectedDate = document.getElementById('evtDate').value;
+
+      var prevMonthLastDay = new Date(year, month, 0).getDate();
+      for (var i = startDayOfWeek - 1; i >= 0; i--) {
+        var cell = document.createElement('div');
+        cell.className = 'cal-day-cell other-month';
+        cell.innerHTML = '<div class="cal-day-num">' + (prevMonthLastDay - i) + '</div>';
+        bodyContainer.appendChild(cell);
+      }
+
+      for (var day = 1; day <= totalDays; day++) {
+        (function(d) {
+          var cell = document.createElement('div');
+          var dateStr = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+          cell.className = 'cal-day-cell';
+          cell.setAttribute('data-date', dateStr);
+          if (dateStr === todayStr) cell.classList.add('today');
+          if (dateStr === selectedDate) cell.classList.add('selected-day');
+
+          cell.onclick = function() { selectDateForEvent(dateStr); };
+
+          var cellHtml = '<div class="cal-day-num">' + d + '</div>';
+          var dayEvents = localEvents.filter(function(e) { return e.date === dateStr; });
+          dayEvents.forEach(function(ev) {
+            cellHtml += '<div class="cal-event-chip" title="' + ev.time + ' ' + ev.title + '">' + ev.time + ' ' + ev.title + '</div>';
+          });
+
+          cell.innerHTML = cellHtml;
+          bodyContainer.appendChild(cell);
+        })(day);
+      }
+
+      var remainingCells = (7 - ((startDayOfWeek + totalDays) % 7)) % 7;
+      for (var day = 1; day <= remainingCells; day++) {
+        var cell = document.createElement('div');
+        cell.className = 'cal-day-cell other-month';
+        cell.innerHTML = '<div class="cal-day-num">' + day + '</div>';
+        bodyContainer.appendChild(cell);
+      }
+    }
+
+    function renderEventList() {
+      var evContainer = document.getElementById('eventList');
+      if (localEvents.length === 0) {
+        evContainer.innerHTML = '<p style="color:#888;">登録された予定はありません。</p>';
+      } else {
+        evContainer.innerHTML = localEvents.map(function(ev) {
+          return '<div class="event-item"><strong>' + ev.date + ' ' + ev.time + '</strong> : ' + ev.title + '</div>';
+        }).join('');
+      }
+    }
+
+    function changeMonth(delta) {
+      currentViewDate.setMonth(currentViewDate.getMonth() + delta);
+      renderMonthCalendar();
+    }
+
+    function switchCalTab(tab) {
+      var gridView = document.getElementById('calGridContainer');
+      var listView = document.getElementById('eventList');
+      var gridBtn = document.getElementById('tabGridBtn');
+      var listBtn = document.getElementById('tabListBtn');
+
+      if (tab === 'grid') {
+        gridView.style.display = 'block'; listView.style.display = 'none';
+        gridBtn.classList.add('active'); listBtn.classList.remove('active');
+      } else {
+        gridView.style.display = 'none'; listView.style.display = 'block';
+        gridBtn.classList.remove('active'); listBtn.classList.add('active');
+      }
+    }
+
+    function toggleSection(id) {
+      var el = document.getElementById(id);
+      el.style.display = el.style.display === 'none' ? 'block' : 'none';
+    }
+
+    var calcExpr = "";
+    function calcInput(v) {
+      var disp = document.getElementById('calcDisplay');
+      if (v === 'C') { calcExpr = ""; disp.value = ""; }
+      else if (v === '=') {
+        try { disp.value = eval(calcExpr); calcExpr = disp.value; }
+        catch(e) { disp.value = "Error"; calcExpr = ""; }
+      } else { calcExpr += v; disp.value = calcExpr; }
+    }
+  </script>
+</body>
+</html>
