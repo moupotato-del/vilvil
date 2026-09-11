@@ -2,7 +2,13 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  
+  <!-- スマホの「ホーム画面に追加」時に全画面アプリ化する設定 -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  
   <title>VIL - Logistics Management</title>
   <style>
     :root {
@@ -15,24 +21,51 @@
       --sub-text: #607369;
       --border: #d4e3da;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background-color: var(--bg-color); color: var(--text); min-height: 100vh;
-      display: flex; flex-direction: column;
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* 画面全体を固定して不要な余白・はみ出しを防止 */
+    html, body {
+      width: 100%;
+      height: 100%;
+      height: 100dvh;
+      overflow: hidden;
+      background-color: var(--bg-color);
+      color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
 
     /* Splash Screen */
     #splash {
-      position: fixed; inset: 0; background: linear-gradient(135deg, #1b3628, #2e5a44);
-      display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999;
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg, #1b3628, #2e5a44);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
       transition: opacity 0.6s ease;
     }
     #splash.fade-out { opacity: 0; pointer-events: none; }
     .splash-logo { font-size: 3.5rem; font-weight: 800; letter-spacing: 0.2em; color: #ffffff; margin-bottom: 8px; }
     .splash-sub { font-size: 0.9rem; color: var(--accent); letter-spacing: 0.15em; font-weight: 500; }
 
-    #loginScreen { position: fixed; inset: 0; background: var(--bg-color); display: flex; justify-content: center; align-items: center; z-index: 9000; }
+    /* Login Screen */
+    #loginScreen {
+      position: fixed;
+      inset: 0;
+      background: var(--bg-color);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9000;
+    }
     .login-card { background: var(--card-bg); padding: 30px; border-radius: 16px; border: 1px solid var(--border); text-align: center; width: 300px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
     .login-title { font-size: 1.1rem; margin-bottom: 20px; color: var(--primary); font-weight: bold; }
     .pass-dots { display: flex; justify-content: center; gap: 12px; margin-bottom: 25px; }
@@ -41,12 +74,21 @@
     .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
     .key-btn { background: var(--primary-light); border: none; border-radius: 50%; width: 55px; height: 55px; font-size: 1.2rem; color: var(--primary); margin: 0 auto; cursor: pointer; font-weight: bold; }
 
-    #app { display: none; flex: 1; flex-direction: column; }
+    /* Main App Layout */
+    #app {
+      display: none;
+      width: 100%;
+      height: 100dvh;
+      flex-direction: column;
+    }
     #app.active { display: flex; }
     
     header {
-      position: sticky; top: 0; z-index: 100;
-      background: var(--card-bg); border-bottom: 1px solid var(--border); padding: 12px 20px;
+      flex-shrink: 0;
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 20px;
+      padding-top: max(12px, env(safe-area-inset-top));
       box-shadow: 0 2px 10px rgba(0,0,0,0.03);
     }
     .header-top { display: flex; justify-content: space-between; align-items: center; max-width: 800px; margin: 0 auto; }
@@ -58,7 +100,19 @@
     .info-bar { max-width: 800px; margin: 10px auto 0; display: flex; justify-content: space-between; align-items: center; background: var(--primary-light); padding: 8px 14px; border-radius: 8px; }
     .date-time { font-size: 0.85rem; font-weight: bold; }
 
-    .single-col-container { max-width: 800px; margin: 20px auto; width: 100%; padding: 0 15px 40px 15px; display: flex; flex-direction: column; gap: 24px; }
+    /* コンテンツエリアのみ内部スクロール */
+    .single-col-container {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      max-width: 800px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 16px 15px 40px 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
     .section-card { background: var(--card-bg); border-radius: 14px; border: 1px solid var(--border); padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
     .section-header { font-size: 1.1rem; color: var(--primary); font-weight: bold; padding-bottom: 10px; margin-bottom: 16px; border-bottom: 2px solid var(--primary-light); display: flex; justify-content: space-between; align-items: center; }
 
@@ -258,8 +312,8 @@
   </div>
 
   <script>
-    // ↓ここにステップ1で取得したGASのWebアプリURLを貼り付けます
-    const GAS_WEB_APP_URL = "ここにGASのデプロイURLを貼り付け";
+    // 先ほど設定したGASデプロイURLが入っているかご確認ください
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzzX3-your-gas-url/exec";
 
     setTimeout(function() {
       var splash = document.getElementById('splash');
@@ -423,7 +477,6 @@
       renderWeatherList();
     }
 
-    // GitHubからGASのWeb APIへ接続して双方向同期
     function syncData() {
       var btn = document.getElementById('syncBtn');
       var status = document.getElementById('statusLabel');
