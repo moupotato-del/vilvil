@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   
-  <!-- スマホの「ホーム画面に追加」時に全画面アプリ化する設定 -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="mobile-web-app-capable" content="yes">
@@ -12,14 +11,14 @@
   <title>VIL - Logistics Management</title>
   <style>
     :root {
-      --bg-color: #f2f7f4;
+      --bg-color: #eaf1ed;
       --card-bg: #ffffff;
-      --primary: #2e5a44;
-      --primary-light: #e8f2ec;
-      --accent: #b8d8c4;
-      --text: #2c3e35;
-      --sub-text: #607369;
-      --border: #d4e3da;
+      --primary: #1b3d2b;
+      --primary-light: #d8e8dd;
+      --accent: #88c49e;
+      --text: #112219;
+      --sub-text: #455a4e;
+      --border: #b0c9bb;
     }
 
     * {
@@ -27,9 +26,9 @@
       margin: 0;
       padding: 0;
       -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
     }
 
-    /* 画面全体を固定して不要な余白・はみ出しを防止 */
     html, body {
       width: 100%;
       height: 100%;
@@ -38,124 +37,119 @@
       background-color: var(--bg-color);
       color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      position: fixed;
     }
 
     /* Splash Screen */
     #splash {
-      position: fixed;
-      inset: 0;
-      background: linear-gradient(135deg, #1b3628, #2e5a44);
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      z-index: 9999;
-      transition: opacity 0.6s ease;
+      position: fixed; inset: 0;
+      background: linear-gradient(135deg, #0d2117, #1b3d2b);
+      display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999;
+      transition: opacity 0.5s ease;
     }
     #splash.fade-out { opacity: 0; pointer-events: none; }
     .splash-logo { font-size: 3.5rem; font-weight: 800; letter-spacing: 0.2em; color: #ffffff; margin-bottom: 8px; }
-    .splash-sub { font-size: 0.9rem; color: var(--accent); letter-spacing: 0.15em; font-weight: 500; }
+    .splash-sub { font-size: 0.9rem; color: var(--accent); letter-spacing: 0.15em; font-weight: 600; }
 
     /* Login Screen */
     #loginScreen {
-      position: fixed;
-      inset: 0;
-      background: var(--bg-color);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 9000;
+      position: fixed; inset: 0; background: var(--bg-color);
+      display: flex; justify-content: center; align-items: center; z-index: 9000; user-select: none;
     }
-    .login-card { background: var(--card-bg); padding: 30px; border-radius: 16px; border: 1px solid var(--border); text-align: center; width: 300px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
-    .login-title { font-size: 1.1rem; margin-bottom: 20px; color: var(--primary); font-weight: bold; }
-    .pass-dots { display: flex; justify-content: center; gap: 12px; margin-bottom: 25px; }
-    .dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--primary); }
+    .login-card { background: var(--card-bg); padding: 30px; border-radius: 18px; border: 2px solid var(--border); text-align: center; width: 310px; box-shadow: 0 12px 32px rgba(0,0,0,0.12); }
+    .login-title { font-size: 1.15rem; margin-bottom: 22px; color: var(--primary); font-weight: 800; }
+    .pass-dots { display: flex; justify-content: center; gap: 14px; margin-bottom: 28px; }
+    .dot { width: 16px; height: 16px; border-radius: 50%; border: 2.5px solid var(--primary); }
     .dot.filled { background: var(--primary); }
-    .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-    .key-btn { background: var(--primary-light); border: none; border-radius: 50%; width: 55px; height: 55px; font-size: 1.2rem; color: var(--primary); margin: 0 auto; cursor: pointer; font-weight: bold; }
+    .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .key-btn {
+      background: var(--primary-light); border: 1px solid var(--border); border-radius: 50%;
+      width: 58px; height: 58px; font-size: 1.3rem; color: var(--primary); margin: 0 auto;
+      cursor: pointer; font-weight: 800; display: flex; justify-content: center; align-items: center;
+    }
+    .key-btn:active { background: var(--primary); color: #ffffff; }
 
     /* Main App Layout */
-    #app {
-      display: none;
-      width: 100%;
-      height: 100dvh;
-      flex-direction: column;
-    }
+    #app { display: none; width: 100%; height: 100dvh; flex-direction: column; }
     #app.active { display: flex; }
     
     header {
-      flex-shrink: 0;
-      background: var(--card-bg);
-      border-bottom: 1px solid var(--border);
-      padding: 12px 20px;
-      padding-top: max(12px, env(safe-area-inset-top));
-      box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+      flex-shrink: 0; background: var(--card-bg); border-bottom: 2px solid var(--border);
+      padding: 12px 20px; padding-top: max(12px, env(safe-area-inset-top)); box-shadow: 0 2px 10px rgba(0,0,0,0.05);
     }
     .header-top { display: flex; justify-content: space-between; align-items: center; max-width: 800px; margin: 0 auto; }
     .app-brand { font-size: 1.6rem; color: var(--primary); font-weight: 800; letter-spacing: 0.15em; }
     .header-actions { display: flex; gap: 8px; align-items: center; }
-    .sync-btn { background: var(--primary); color: #ffffff; border: none; padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; cursor: pointer; font-weight: bold; }
-    .logout-btn { background: #ffffff; color: #d9534f; border: 1px solid #d9534f; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; cursor: pointer; font-weight: bold; }
+    .sync-btn { background: var(--primary); color: #ffffff; border: none; padding: 7px 16px; border-radius: 20px; font-size: 0.82rem; cursor: pointer; font-weight: bold; }
+    .logout-btn { background: #ffffff; color: #c92a2a; border: 2px solid #c92a2a; padding: 6px 14px; border-radius: 20px; font-size: 0.82rem; cursor: pointer; font-weight: bold; }
 
-    .info-bar { max-width: 800px; margin: 10px auto 0; display: flex; justify-content: space-between; align-items: center; background: var(--primary-light); padding: 8px 14px; border-radius: 8px; }
-    .date-time { font-size: 0.85rem; font-weight: bold; }
+    .info-bar { max-width: 800px; margin: 10px auto 0; display: flex; justify-content: space-between; align-items: center; background: var(--primary-light); border: 1px solid var(--border); padding: 8px 14px; border-radius: 8px; }
+    .date-time { font-size: 0.85rem; font-weight: bold; color: var(--primary); }
 
-    /* コンテンツエリアのみ内部スクロール */
     .single-col-container {
-      flex: 1;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-      max-width: 800px;
-      margin: 0 auto;
-      width: 100%;
-      padding: 16px 15px 40px 15px;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
+      flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+      max-width: 800px; margin: 0 auto; width: 100%; padding: 16px 15px 40px 15px;
+      display: flex; flex-direction: column; gap: 20px;
     }
-    .section-card { background: var(--card-bg); border-radius: 14px; border: 1px solid var(--border); padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
-    .section-header { font-size: 1.1rem; color: var(--primary); font-weight: bold; padding-bottom: 10px; margin-bottom: 16px; border-bottom: 2px solid var(--primary-light); display: flex; justify-content: space-between; align-items: center; }
+    .section-card { background: var(--card-bg); border-radius: 14px; border: 2px solid var(--border); padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); }
+    .section-header { font-size: 1.1rem; color: var(--primary); font-weight: 800; padding-bottom: 10px; margin-bottom: 16px; border-bottom: 2.5px solid var(--primary-light); display: flex; justify-content: space-between; align-items: center; }
 
-    input, textarea, select { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 10px; font-size: 0.9rem; font-family: inherit; }
-    button.btn-main { background: var(--primary); color: white; border: none; padding: 9px 18px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: bold; font-family: inherit; }
+    input, textarea, select { width: 100%; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 8px; margin-bottom: 10px; font-size: 0.95rem; font-family: inherit; color: var(--text); background: #ffffff; }
+    button.btn-main { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 0.92rem; font-weight: bold; font-family: inherit; }
 
     .weather-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin-bottom: 14px; }
-    .weather-card { background: #fafafa; border: 1px solid var(--border); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; justify-content: space-between; }
-    .weather-loc { font-weight: bold; color: var(--primary); font-size: 0.95rem; display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
-    .weather-info-row { font-size: 0.85rem; margin-top: 4px; display: flex; justify-content: space-between; }
-    .weather-del-btn { background: none; border: none; color: #d9534f; cursor: pointer; font-size: 0.75rem; }
+    .weather-card { background: #f7faf8; border: 1.5px solid var(--border); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; justify-content: space-between; }
+    .weather-loc { font-weight: 800; color: var(--primary); font-size: 0.95rem; display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .weather-info-row { font-size: 0.88rem; margin-top: 4px; display: flex; justify-content: space-between; font-weight: 600; }
+    .weather-del-btn { background: none; border: none; color: #c92a2a; cursor: pointer; font-size: 0.78rem; font-weight: bold; }
 
-    .post-item { border-bottom: 1px solid var(--border); padding: 12px 0; }
+    .post-item { border-bottom: 1.5px solid var(--border); padding: 12px 0; }
     .post-item:last-child { border-bottom: none; }
-    .post-meta { font-size: 0.78rem; color: var(--sub-text); margin-bottom: 6px; }
-    .device-badge { background: #e0ece5; color: #2e5a44; font-family: monospace; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-left: 6px; }
-    .post-text { font-size: 0.92rem; white-space: pre-wrap; line-height: 1.4; }
+    .post-meta { font-size: 0.8rem; color: var(--sub-text); margin-bottom: 6px; font-weight: 600; }
+    .device-badge { background: #cce3d5; color: var(--primary); font-family: monospace; padding: 2px 6px; border-radius: 4px; font-size: 0.72rem; margin-left: 6px; font-weight: bold; }
+    .post-text { font-size: 0.95rem; white-space: pre-wrap; line-height: 1.45; font-weight: 500; }
+
+    /* 手書き描画モーダル・キャンバス */
+    #drawModal {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+      z-index: 10000; justify-content: center; align-items: center;
+    }
+    .draw-card {
+      background: #ffffff; padding: 20px; border-radius: 16px; width: 330px; text-align: center;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+    #drawCanvas {
+      background: #fdfdfd; border: 2px solid var(--primary); border-radius: 10px;
+      touch-action: none; cursor: crosshair; margin-bottom: 12px;
+    }
+    .draw-actions { display: flex; gap: 8px; justify-content: center; }
+    .draw-btn { padding: 8px 14px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; font-size: 0.85rem; }
 
     .cal-header-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-    .cal-nav-btn { background: var(--primary-light); border: 1px solid var(--border); border-radius: 6px; padding: 5px 12px; cursor: pointer; color: var(--primary); font-weight: bold; font-family: inherit; }
+    .cal-nav-btn { background: var(--primary-light); border: 1.5px solid var(--border); border-radius: 6px; padding: 6px 14px; cursor: pointer; color: var(--primary); font-weight: 800; font-family: inherit; }
     .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; font-size: 0.8rem; }
-    .cal-day-header { font-weight: bold; padding: 6px 0; background: var(--primary-light); border-radius: 6px; color: var(--primary); }
+    .cal-day-header { font-weight: 800; padding: 6px 0; background: var(--primary-light); border-radius: 6px; color: var(--primary); }
     .cal-day-cell {
-      min-height: 65px; background: #fafafa; border: 1px solid var(--border); border-radius: 6px; padding: 4px;
+      min-height: 65px; background: #ffffff; border: 1.5px solid var(--border); border-radius: 6px; padding: 4px;
       display: flex; flex-direction: column; justify-content: flex-start; text-align: left; cursor: pointer; user-select: none;
     }
-    .cal-day-cell:hover { background: #f0f7f2; }
-    .cal-day-cell.other-month { opacity: 0.3; cursor: default; }
-    .cal-day-num { font-weight: bold; font-size: 0.75rem; margin-bottom: 2px; }
-    .cal-day-cell.today { background: #e2f0e8; border-color: var(--primary); }
-    .cal-day-cell.selected-day { border: 2px solid var(--primary) !important; background: #dcece2; }
-    .cal-event-chip { background: var(--primary); color: white; font-size: 0.65rem; padding: 2px 4px; border-radius: 3px; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .cal-day-cell:hover { background: #e8f2ec; }
+    .cal-day-cell.other-month { opacity: 0.35; cursor: default; }
+    .cal-day-num { font-weight: 800; font-size: 0.78rem; margin-bottom: 2px; }
+    .cal-day-cell.today { background: #dcece2; border-color: var(--primary); border-width: 2px; }
+    .cal-day-cell.selected-day { border: 2.5px solid var(--primary) !important; background: #c2e0cd; }
+    .cal-event-chip { background: var(--primary); color: white; font-size: 0.65rem; padding: 2px 4px; border-radius: 3px; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: bold; }
 
-    .tab-container { display: flex; gap: 8px; margin-bottom: 14px; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
-    .tab-btn { background: none; border: none; font-size: 0.88rem; padding: 6px 12px; cursor: pointer; color: var(--sub-text); font-weight: bold; font-family: inherit; }
-    .tab-btn.active { color: var(--primary); border-bottom: 3px solid var(--primary); }
+    .tab-container { display: flex; gap: 8px; margin-bottom: 14px; border-bottom: 2px solid var(--border); padding-bottom: 6px; }
+    .tab-btn { background: none; border: none; font-size: 0.9rem; padding: 6px 12px; cursor: pointer; color: var(--sub-text); font-weight: 800; font-family: inherit; }
+    .tab-btn.active { color: var(--primary); border-bottom: 3.5px solid var(--primary); }
 
-    .event-item { background: var(--primary-light); padding: 10px 14px; border-radius: 8px; margin-bottom: 8px; font-size: 0.88rem; border-left: 4px solid var(--primary); }
+    .event-item { background: var(--primary-light); padding: 10px 14px; border-radius: 8px; margin-bottom: 8px; font-size: 0.9rem; border-left: 5px solid var(--primary); font-weight: 600; }
 
     .calc-container { max-width: 320px; margin: 0 auto; }
     .calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-    .calc-btn { padding: 12px; font-size: 1rem; background: #f4f4f4; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; font-weight: bold; font-family: inherit; }
-    .calc-btn:active { background: #ddd; }
+    .calc-btn { padding: 14px; font-size: 1.1rem; background: #ffffff; border: 1.5px solid var(--border); border-radius: 10px; cursor: pointer; font-weight: 800; font-family: inherit; color: var(--primary); }
+    .calc-btn:active { background: var(--primary-light); }
   </style>
 </head>
 <body>
@@ -189,6 +183,19 @@
     </div>
   </div>
 
+  <!-- 手書き入力モーダル画面 -->
+  <div id="drawModal">
+    <div class="draw-card">
+      <h3 style="margin-bottom:10px; color:var(--primary);">手書きメッセージ</h3>
+      <canvas id="drawCanvas" width="280" height="180"></canvas>
+      <div class="draw-actions">
+        <button class="draw-btn" style="background:#ddd;" onclick="clearCanvas()">クリア</button>
+        <button class="draw-btn" style="background:#d9534f; color:white;" onclick="closeDrawModal()">キャンセル</button>
+        <button class="draw-btn" style="background:var(--primary); color:white;" onclick="submitDrawMessage()">投稿する</button>
+      </div>
+    </div>
+  </div>
+
   <div id="app">
     <header>
       <div class="header-top">
@@ -200,7 +207,7 @@
       </div>
       <div class="info-bar">
         <div class="date-time" id="currentClock">----/--/-- (-) --:--:--</div>
-        <div style="font-size:0.8rem; font-weight:bold; color:var(--primary);" id="statusLabel">リアルタイム天気連携中</div>
+        <div style="font-size:0.8rem; font-weight:800; color:var(--primary);" id="statusLabel">リアルタイム天気連携中</div>
       </div>
     </header>
 
@@ -210,7 +217,7 @@
       <section class="section-card">
         <div class="section-header">
           <span>地域別 リアルタイム天気</span>
-          <button onclick="addWeatherLocation()" style="background:var(--primary-light); border:1px solid var(--border); color:var(--primary); padding:4px 10px; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:bold;">＋ 地域を追加</button>
+          <button onclick="addWeatherLocation()" style="background:var(--primary-light); border:1.5px solid var(--border); color:var(--primary); padding:4px 10px; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:800;">＋ 地域を追加</button>
         </div>
         <div class="weather-grid" id="weatherList"></div>
       </section>
@@ -219,10 +226,10 @@
       <section class="section-card">
         <div class="section-header">
           <span>カレンダー・予定管理</span>
-          <button onclick="toggleSection('eventSection')" style="background:none; border:none; color:var(--primary); cursor:pointer; font-size:0.8rem; font-weight:bold;">開く / 畳む</button>
+          <button onclick="toggleSection('eventSection')" style="background:none; border:none; color:var(--primary); cursor:pointer; font-size:0.8rem; font-weight:800;">開く / 畳む</button>
         </div>
         <div id="eventSection">
-          <form id="eventForm" onsubmit="submitEvent(event)" style="display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; background:var(--primary-light); padding:12px; border-radius:8px;">
+          <form id="eventForm" onsubmit="submitEvent(event)" style="display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; background:var(--primary-light); padding:12px; border-radius:8px; border:1px solid var(--border);">
             <input type="date" id="evtDate" required style="margin:0; flex:1; min-width:130px;">
             <input type="time" id="evtTime" value="09:00" required style="margin:0; width:110px;">
             <input type="text" id="evtTitle" placeholder="予定内容を入力" required style="margin:0; flex:2; min-width:150px;">
@@ -241,13 +248,13 @@
               <button class="cal-nav-btn" onclick="changeMonth(1)">次月</button>
             </div>
             <div class="cal-grid" id="calGridHeader">
-              <div class="cal-day-header" style="color:#d9534f;">日</div>
+              <div class="cal-day-header" style="color:#c92a2a;">日</div>
               <div class="cal-day-header">月</div>
               <div class="cal-day-header">火</div>
               <div class="cal-day-header">水</div>
               <div class="cal-day-header">木</div>
               <div class="cal-day-header">金</div>
-              <div class="cal-day-header" style="color:#0275d8;">土</div>
+              <div class="cal-day-header" style="color:#1c7ed6;">土</div>
             </div>
             <div class="cal-grid" id="calGridBody" style="margin-top:4px;"></div>
           </div>
@@ -260,14 +267,17 @@
       <section class="section-card">
         <div class="section-header">
           <span>掲示板</span>
-          <span id="myDeviceIdDisplay" style="font-size:0.75rem; color:var(--sub-text); font-weight:normal;"></span>
+          <span id="myDeviceIdDisplay" style="font-size:0.75rem; color:var(--sub-text); font-weight:600;"></span>
         </div>
         <form id="bbsForm" onsubmit="submitBbs(event)">
           <input type="text" id="bbsName" placeholder="お名前（省略可）" style="margin-bottom:8px;">
           <textarea id="bbsMsg" rows="3" placeholder="メッセージを入力してください" required></textarea>
-          <button type="submit" class="btn-main">投稿する</button>
+          <div style="display:flex; gap:10px; margin-top:4px;">
+            <button type="submit" class="btn-main" style="flex:1;">投稿する</button>
+            <button type="button" onclick="openDrawModal()" class="btn-main" style="background:var(--accent); color:var(--primary);">✍️ 手書きで書く</button>
+          </div>
         </form>
-        <hr style="margin: 16px 0; border:none; border-top: 1px solid var(--border);">
+        <hr style="margin: 16px 0; border:none; border-top: 1.5px solid var(--border);">
         <div id="bbsList"></div>
       </section>
 
@@ -285,7 +295,7 @@
           <span>ミニ電卓</span>
         </div>
         <div class="calc-container">
-          <input type="text" id="calcDisplay" readonly style="text-align:right; font-size:1.2rem; margin-bottom:10px; padding:10px;">
+          <input type="text" id="calcDisplay" readonly style="text-align:right; font-size:1.3rem; font-weight:bold; margin-bottom:10px; padding:10px; background:#fafafa;">
           <div class="calc-grid">
             <button class="calc-btn" onclick="calcInput('C')">C</button>
             <button class="calc-btn" onclick="calcInput('/')">÷</button>
@@ -298,7 +308,7 @@
             <button class="calc-btn" onclick="calcInput('4')">4</button>
             <button class="calc-btn" onclick="calcInput('5')">5</button>
             <button class="calc-btn" onclick="calcInput('6')">6</button>
-            <button class="calc-btn" onclick="calcInput('=')" style="grid-row: span 2; background:var(--accent);">=</button>
+            <button class="calc-btn" onclick="calcInput('=')" style="grid-row: span 2; background:var(--accent); color:var(--primary);">=</button>
             <button class="calc-btn" onclick="calcInput('1')">1</button>
             <button class="calc-btn" onclick="calcInput('2')">2</button>
             <button class="calc-btn" onclick="calcInput('3')">3</button>
@@ -312,16 +322,15 @@
   </div>
 
   <script>
-    // 先ほど設定したGASデプロイURLが入っているかご確認ください
     const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzzX3-your-gas-url/exec";
 
     setTimeout(function() {
       var splash = document.getElementById('splash');
       if (splash) {
         splash.classList.add('fade-out');
-        setTimeout(function() { splash.style.display = 'none'; }, 600);
+        setTimeout(function() { splash.style.display = 'none'; }, 500);
       }
-    }, 3000);
+    }, 2600);
 
     var localBbs = JSON.parse(localStorage.getItem('VIL_LOCAL_BBS')) || [];
     var localEvents = JSON.parse(localStorage.getItem('VIL_LOCAL_EVENTS')) || [];
@@ -335,6 +344,141 @@
       { name: '東京都千代田区', lat: 35.694, lon: 139.753 }
     ];
 
+    /* --- 手書き＆アニメーション再生エンジン --- */
+    let canvas, ctx;
+    let isDrawing = false;
+    let currentStroke = [];
+    let drawHistory = [];
+    let startTime = 0;
+
+    function initCanvas() {
+      canvas = document.getElementById('drawCanvas');
+      ctx = canvas.getContext('2d');
+      ctx.lineWidth = 3;
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = '#1b3d2b';
+
+      function getPos(e) {
+        const rect = canvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return { x: clientX - rect.left, y: clientY - rect.top };
+      }
+
+      function startDraw(e) {
+        isDrawing = true;
+        if (drawHistory.length === 0) startTime = Date.now();
+        const pos = getPos(e);
+        ctx.beginPath();
+        ctx.moveTo(pos.x, pos.y);
+        currentStroke = [{ type: 'start', x: pos.x, y: pos.y, t: Date.now() - startTime }];
+      }
+
+      function moveDraw(e) {
+        if (!isDrawing) return;
+        e.preventDefault();
+        const pos = getPos(e);
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+        currentStroke.push({ type: 'move', x: pos.x, y: pos.y, t: Date.now() - startTime });
+      }
+
+      function endDraw() {
+        if (isDrawing) {
+          isDrawing = false;
+          drawHistory.push(currentStroke);
+        }
+      }
+
+      canvas.addEventListener('mousedown', startDraw);
+      canvas.addEventListener('mousemove', moveDraw);
+      canvas.addEventListener('mouseup', endDraw);
+
+      canvas.addEventListener('touchstart', startDraw);
+      canvas.addEventListener('touchmove', moveDraw);
+      canvas.addEventListener('touchend', endDraw);
+    }
+
+    function openDrawModal() {
+      document.getElementById('drawModal').style.display = 'flex';
+      if (!canvas) initCanvas();
+      clearCanvas();
+    }
+
+    function closeDrawModal() {
+      document.getElementById('drawModal').style.display = 'none';
+    }
+
+    function clearCanvas() {
+      if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawHistory = [];
+    }
+
+    function submitDrawMessage() {
+      if (drawHistory.length === 0) {
+        alert('何か文字や絵を書いてください。');
+        return;
+      }
+      const name = document.getElementById('bbsName').value || '名無し';
+      const devId = getDeviceId();
+      const nowStr = new Date().toLocaleString('ja-JP');
+
+      const newItem = {
+        time: nowStr,
+        name: name,
+        message: '[HANDDRAW:' + JSON.stringify(drawHistory) + ']',
+        deviceId: devId
+      };
+
+      localBbs.unshift(newItem);
+      newUnsyncedBbs.push(newItem);
+      localStorage.setItem('VIL_LOCAL_BBS', JSON.stringify(localBbs));
+
+      closeDrawModal();
+      renderBbsUI();
+    }
+
+    function replayStroke(canvasId, strokeDataJson) {
+      const cvs = document.getElementById(canvasId);
+      if (!cvs) return;
+      const c = cvs.getContext('2d');
+      c.clearRect(0, 0, cvs.width, cvs.height);
+      c.lineWidth = 3;
+      c.lineCap = 'round';
+      c.strokeStyle = '#1b3d2b';
+
+      const history = JSON.parse(strokeDataJson);
+      let allPoints = [];
+      history.forEach(stroke => {
+        allPoints = allPoints.concat(stroke);
+      });
+
+      if (allPoints.length === 0) return;
+
+      let idx = 0;
+      const startT = Date.now();
+
+      function step() {
+        const elapsed = Date.now() - startT;
+        while (idx < allPoints.length && allPoints[idx].t <= elapsed) {
+          const pt = allPoints[idx];
+          if (pt.type === 'start') {
+            c.beginPath();
+            c.moveTo(pt.x, pt.y);
+          } else if (pt.type === 'move') {
+            c.lineTo(pt.x, pt.y);
+            c.stroke();
+          }
+          idx++;
+        }
+        if (idx < allPoints.length) {
+          requestAnimationFrame(step);
+        }
+      }
+      requestAnimationFrame(step);
+    }
+
+    /* --- 標準機能・掲示板描画 --- */
     function parseWmoCode(code) {
       if (code === 0) return '晴れ';
       if ([1, 2, 3].indexOf(code) !== -1) return 'くもり';
@@ -366,7 +510,7 @@
     function renderWeatherList() {
       var container = document.getElementById('weatherList');
       if (!container) return;
-      container.innerHTML = '<p style="color:#888; font-size:0.85rem;">最新天気を読み込み中...</p>';
+      container.innerHTML = '<p style="color:#555; font-size:0.85rem; font-weight:bold;">最新天気を読み込み中...</p>';
 
       var promises = savedLocations.map(function(loc) { return fetchWeatherData(loc); });
 
@@ -437,7 +581,7 @@
               document.getElementById('loginScreen').style.display = 'none';
               document.getElementById('app').classList.add('active');
               initApp();
-            }, 200);
+            }, 180);
           } else { alert("暗証番号が違います"); clearKey(); }
         }
       }
@@ -531,6 +675,36 @@
       renderBbsUI();
     }
 
+    function renderBbsUI() {
+      var container = document.getElementById('bbsList');
+      if (localBbs.length === 0) {
+        container.innerHTML = '<p style="color:#666; font-weight:bold;">まだ投稿はありません。</p>';
+      } else {
+        container.innerHTML = localBbs.map(function(item, idx) {
+          let msgHtml = '';
+          if (item.message && item.message.indexOf('[HANDDRAW:') === 0) {
+            const rawJson = item.message.replace('[HANDDRAW:', '').slice(0, -1);
+            const canvasId = 'replayCvs_' + idx;
+            msgHtml = `
+              <div style="margin-top:6px;">
+                <canvas id="${canvasId}" width="280" height="180" style="background:#ffffff; border:1.5px solid var(--border); border-radius:8px;"></canvas>
+                <br>
+                <button onclick="replayStroke('${canvasId}', '${rawJson.replace(/'/g, "\\'")}')" class="btn-main" style="padding:4px 12px; font-size:0.75rem; margin-top:4px;">▶ 再生する</button>
+              </div>
+            `;
+            setTimeout(() => { replayStroke(canvasId, rawJson); }, 100);
+          } else {
+            msgHtml = '<div class="post-text">' + item.message + '</div>';
+          }
+
+          return '<div class="post-item">' +
+            '<div class="post-meta"><strong>' + item.name + '</strong>' + (item.deviceId ? '<span class="device-badge">' + item.deviceId + '</span>' : '') + ' • ' + item.time + '</div>' +
+            msgHtml +
+          '</div>';
+        }).join('');
+      }
+    }
+
     function submitEvent(e) {
       e.preventDefault();
       var date = document.getElementById('evtDate').value;
@@ -563,20 +737,6 @@
     function autoSaveMemo() {
       var val = document.getElementById('memoArea').value;
       localStorage.setItem('VIL_LOCAL_MEMO', val);
-    }
-
-    function renderBbsUI() {
-      var container = document.getElementById('bbsList');
-      if (localBbs.length === 0) {
-        container.innerHTML = '<p style="color:#888;">まだ投稿はありません。</p>';
-      } else {
-        container.innerHTML = localBbs.map(function(item) {
-          return '<div class="post-item">' +
-            '<div class="post-meta"><strong>' + item.name + '</strong>' + (item.deviceId ? '<span class="device-badge">' + item.deviceId + '</span>' : '') + ' • ' + item.time + '</div>' +
-            '<div class="post-text">' + item.message + '</div>' +
-          '</div>';
-        }).join('');
-      }
     }
 
     function renderMonthCalendar() {
@@ -637,7 +797,7 @@
     function renderEventList() {
       var evContainer = document.getElementById('eventList');
       if (localEvents.length === 0) {
-        evContainer.innerHTML = '<p style="color:#888;">登録された予定はありません。</p>';
+        evContainer.innerHTML = '<p style="color:#666; font-weight:bold;">登録された予定はありません。</p>';
       } else {
         evContainer.innerHTML = localEvents.map(function(ev) {
           return '<div class="event-item"><strong>' + ev.date + ' ' + ev.time + '</strong> : ' + ev.title + '</div>';
