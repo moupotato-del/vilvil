@@ -124,7 +124,13 @@
     }
     .replies-container.open { display: flex; }
     .reply-item { background: #151c2c; padding: 6px 8px; border-radius: 6px; font-size: 0.8rem; border: 1px solid rgba(59, 130, 246, 0.3); color: var(--reply-blue); word-break: break-all; }
+    .reply-header { display: flex; justify-content: space-between; align-items: center; }
     .reply-text-content { color: #60a5fa; margin-top: 2px; }
+
+    .del-btn-sm {
+      background: none; border: none; color: var(--accent-red); font-size: 0.7rem; font-weight: bold; cursor: pointer; opacity: 0.8; padding: 2px 4px;
+    }
+    .del-btn-sm:hover { opacity: 1; text-decoration: underline; }
 
     /* Modals */
     .modal-overlay {
@@ -360,7 +366,7 @@
       closeModal('nameModal');
     }
 
-    let posts = JSON.parse(localStorage.getItem('VIL_CANVAS_POSTS_V9')) || [];
+    let posts = JSON.parse(localStorage.getItem('VIL_CANVAS_POSTS_V10')) || [];
     let events = JSON.parse(localStorage.getItem('VIL_CANVAS_EVENTS')) || [];
     let activeReplyPostId = null;
     let activeAnimTimers = {};
@@ -377,7 +383,6 @@
       setInterval(autoSyncData, 5000);
     };
 
-    /* --- 画像選択・添付修正処理 --- */
     function handleImageSelect(e) {
       const file = e.target.files[0];
       if (!file) return;
@@ -503,9 +508,30 @@
       activeAnimTimers[canvasId] = requestAnimationFrame(step);
     }
 
+    /* --- 投稿＆コメントの個別削除機能 --- */
+    function deleteMyPost(postId) {
+      if (confirm('この投稿を削除しますか？')) {
+        posts = posts.filter(p => p.id !== postId);
+        saveLocalPosts();
+        renderTimeline();
+      }
+    }
+
+    function deleteMyReply(postId, replyId) {
+      if (confirm('このコメントを削除しますか？')) {
+        const targetPost = posts.find(p => p.id === postId);
+        if (targetPost && targetPost.replies) {
+          targetPost.replies = targetPost.replies.filter(r => r.id !== replyId);
+          saveLocalPosts();
+          renderTimeline();
+        }
+      }
+    }
+
     function renderTimeline() {
       const container = document.getElementById('timelineContainer');
       const recentPosts = posts.slice(0, 7);
+      const myId = getOrCreateDeviceId();
 
       if (recentPosts.length === 0) {
         container.innerHTML = '<p style="color:var(--sub-text); font-size:0.8rem;">まだ投稿がありません。</p>';
@@ -516,21 +542,31 @@
         const canvasId = 'postCvs_' + post.id;
         const repliesCount = (post.replies || []).length;
         const userColor = generateVisibleColor(post.userId || 'GUEST');
+        const isMyPost = post.userId === myId;
 
         let repliesHtml = (post.replies || []).map(r => {
           const rColor = generateVisibleColor(r.userId || 'GUEST');
+          const isMyReply = r.userId === myId;
+          const delReplyBtn = isMyReply ? `<button class="del-btn-sm" onclick="deleteMyReply('${post.id}', '${r.id}')">削除</button>` : '';
+
           if (r.strokes) {
             const rCvsId = 'replyCvs_' + r.id;
             setTimeout(() => playStrokeAnimation(rCvsId, r.strokes, '#3b82f6'), 100);
             return `<div class="reply-item">
-              <div style="font-size:0.75rem;"><strong style="color:${rColor};">${r.author}</strong><span class="user-id-badge" style="color:${rColor};">(${r.userId || 'GUEST'})</span> • <span style="color:var(--sub-text);">${r.time}</span></div>
+              <div class="reply-header">
+                <span style="font-size:0.75rem;"><strong style="color:${rColor};">${r.author}</strong><span class="user-id-badge" style="color:${rColor};">(${r.userId || 'GUEST'})</span> • <span style="color:var(--sub-text);">${r.time}</span></span>
+                ${delReplyBtn}
+              </div>
               <div style="height:70px; width:100%; position:relative; background:#05070c; border-radius:4px; margin-top:4px; overflow:hidden; border:1px solid var(--reply-blue);">
                 <canvas id="${rCvsId}"></canvas>
               </div>
             </div>`;
           } else {
             return `<div class="reply-item">
-              <div style="font-size:0.75rem;"><strong style="color:${rColor};">${r.author}</strong><span class="user-id-badge" style="color:${rColor};">(${r.userId || 'GUEST'})</span> <span style="font-size:0.65rem; color:var(--sub-text);">(${r.time})</span></div>
+              <div class="reply-header">
+                <span style="font-size:0.75rem;"><strong style="color:${rColor};">${r.author}</strong><span class="user-id-badge" style="color:${rColor};">(${r.userId || 'GUEST'})</span> <span style="font-size:0.65rem; color:var(--sub-text);">(${r.time})</span></span>
+                ${delReplyBtn}
+              </div>
               <div class="reply-text-content">${r.text}</div>
             </div>`;
           }
@@ -539,6 +575,7 @@
         setTimeout(() => playStrokeAnimation(canvasId, post.strokes, '#10b981'), 100);
 
         const shouldCollapse = repliesCount >= 3;
+        const delPostBtn = isMyPost ? `<button class="del-btn-sm" onclick="deleteMyPost('${post.id}')">削除</button>` : '';
 
         return `
           <div class="post-card">
@@ -546,7 +583,10 @@
               <span class="author-tag" style="color:${userColor};">
                 ${post.author}<span class="user-id-badge" style="color:${userColor};">(${post.userId || 'GUEST'})</span>
               </span>
-              <span>${post.time}</span>
+              <div>
+                <span style="margin-right:6px;">${post.time}</span>
+                ${delPostBtn}
+              </div>
             </div>
             <div class="post-body">
               ${post.image ? `<img src="${post.image}" class="bg-image-preview">` : ''}
@@ -703,6 +743,7 @@
       document.getElementById('archiveModal').style.display = 'flex';
       const container = document.getElementById('archiveContainer');
       const archivePosts = posts.slice(7);
+      const myId = getOrCreateDeviceId();
 
       if (archivePosts.length === 0) {
         container.innerHTML = '<p style="color:var(--sub-text); font-size:0.8rem;">8件目以降の過去投稿はまだありません。</p>';
@@ -712,12 +753,18 @@
       container.innerHTML = archivePosts.map((post) => {
         const canvasId = 'archCvs_' + post.id;
         const userColor = generateVisibleColor(post.userId || 'GUEST');
+        const isMyPost = post.userId === myId;
+        const delPostBtn = isMyPost ? `<button class="del-btn-sm" onclick="deleteMyPost('${post.id}')">削除</button>` : '';
+
         setTimeout(() => playStrokeAnimation(canvasId, post.strokes, '#10b981'), 100);
         return `
           <div class="post-card">
             <div class="post-header">
               <strong style="color:${userColor};">${post.author}<span class="user-id-badge" style="color:${userColor};">(${post.userId || 'GUEST'})</span></strong>
-              <span>${post.time}</span>
+              <div>
+                <span style="margin-right:6px;">${post.time}</span>
+                ${delPostBtn}
+              </div>
             </div>
             <div class="post-body">
               ${post.image ? `<img src="${post.image}" class="bg-image-preview">` : ''}
@@ -820,7 +867,7 @@
     }
 
     function saveLocalPosts() {
-      localStorage.setItem('VIL_CANVAS_POSTS_V9', JSON.stringify(posts));
+      localStorage.setItem('VIL_CANVAS_POSTS_V10', JSON.stringify(posts));
     }
 
     function closeModal(id) { document.getElementById(id).style.display = 'none'; }
